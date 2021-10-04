@@ -40,6 +40,9 @@
 *.vvp
 *.fst
 *transcript
+*.qsf
+*old
+*.vcd
 
 /db/
 /greybox_tmp/
