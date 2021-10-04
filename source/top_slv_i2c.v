@@ -3,7 +3,7 @@ module top_slv_i2c
       parameter I2C_CLK  = 100_000,     // I2C bus frequency 400 KHz
       parameter DATA_SZ  = 8)           // data widht
     (CLK, RST_n, I_ACK, I_SCL,
-     O_ADDR_SLV, O_RW, O_ADDR_REG, O_DATA_RD, O_ACK_MSTR,
+     O_ADDR_SLV, O_RW, O_DATA_RD, O_ACK_MSTR, O_BUSY,
      IO_SDA);
     
     
@@ -16,9 +16,9 @@ module top_slv_i2c
 //  output signals
     output wire [DATA_SZ-2:0] O_ADDR_SLV; // addr the slave
     output wire               O_RW;       // RW
-    output wire [DATA_SZ-1:0] O_ADDR_REG; // addr reg in the slave
     output wire [DATA_SZ-1:0] O_DATA_RD;  // read data from the master
     output wire               O_ACK_MSTR; // ACK from the master
+    output wire               O_BUSY;
 //  bidirectional signals
     inout wire IO_SDA; // serial data I2C bus
 //  internal signals        
@@ -95,10 +95,10 @@ module top_slv_i2c
          .I_MDL_HG_IO_SCL(mdl_hg_io_scl),
          .O_ADDR_SLV(O_ADDR_SLV), 
          .O_RW(O_RW), 
-         .O_ADDR_REG(O_ADDR_REG), 
          .O_DATA_RD(O_DATA_RD), 
          .O_ACK_MSTR(O_ACK_MSTR), 
-         .O_SDA(sda_out)
+         .O_SDA(sda_out),
+         .O_BUSY(O_BUSY)
         );        
       
         
