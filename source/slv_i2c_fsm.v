@@ -5,7 +5,7 @@ module slv_i2c_fsm
      
 
 //--------------------------------------------------------------------------      
-    localparam CNT_BIT_DATA_SZ = $clog2(DATA_SZ); // data width of bit counter  
+    localparam CNT_BIT_DATA_SZ = $clog2(DATA_SZ) + 1; // data width of bit counter  
 //  description states FSM
     localparam ST_SZ    = 9; // number of states FSM
     (* syn_encoding = "one-hot" *) reg [ST_SZ-1:0] st; // current state of FSM
@@ -93,9 +93,9 @@ module slv_i2c_fsm
                                 end
                         end
             START    :  begin   
-                            if (I_FL_IO_SCL)
+                            if (I_RS_IO_SCL)
                                 begin
-                                    nx_cnt_bit_data = DATA_SZ - 1'b1;
+                                    nx_cnt_bit_data = DATA_SZ;
                                     nx_st = COMM_MSTR;
                                 end
                         end
@@ -108,12 +108,12 @@ module slv_i2c_fsm
                             if (&(!cnt_bit_data))
                                 begin
                                     nx_comm_slv = buff_rd;
-                                    nx_cnt_bit_data = DATA_SZ - 1'b1;
                                     nx_o_addr_slv = buff_rd[DATA_SZ-1:1];
                                     nx_o_rw = buff_rd[0];
                                     // добавить какой-нибудь сигнал, что адрес слейва и RW валидны
                                     if (I_MDL_LW_IO_SCL)
                                         begin
+                                            nx_cnt_bit_data = DATA_SZ - 1'b1;
                                             nx_o_sda = I_ACK;
                                             nx_go = 1'b1;
                                             nx_st = ACK_COMM;

@@ -41,8 +41,9 @@
 *.fst
 *transcript
 *.qsf
-*old
-*.vcd
+*.qpf
+*old.py
+*.vcd[1-9]
 
 /db/
 /greybox_tmp/

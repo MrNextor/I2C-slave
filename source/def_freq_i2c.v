@@ -35,7 +35,7 @@ module def_freq_i2c
             end
         else  
             begin
-                cnt <= I_SCL ? cnt + 1'b1 : cnt - 1'b1;
+                cnt <= I_FL_IO_SCL || I_RS_IO_SCL ? {CNT_SZ{1'b0}} : cnt + 1'b1;
                 sv_cnt <= I_FL_IO_SCL ? cnt : sv_cnt;
                 O_MDL_LW_IO_SCL <= !I_SCL & en_str ? 1'b1 : 1'b0;
                 O_MDL_HG_IO_SCL <= I_SCL & en_str ? 1'b1 : 1'b0;
