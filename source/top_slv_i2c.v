@@ -2,7 +2,7 @@ module top_slv_i2c
     #(parameter FPGA_CLK = 50_000_000,  // FPGA frequency 50 MHz
       parameter I2C_CLK  = 100_000,     // I2C bus frequency 400 KHz
       parameter DATA_SZ  = 8)           // data widht
-    (CLK, RST_n, I_ACK, I_SCL,
+    (CLK, RST_n, I_ACK, I_SCL, I_DATA_WR,
      O_ADDR_SLV, O_RW, O_DATA_RD, O_ACK_MSTR, O_BUSY, O_DATA_VL,
      IO_SDA);
     
@@ -13,6 +13,7 @@ module top_slv_i2c
     input wire                RST_n;     // asynchronous reset_n
     input wire I_SCL; // serial clock I2C bus 
     input wire I_ACK;
+    input wire [DATA_SZ-1:0] I_DATA_WR;   // data for writing to the master    
 //  output signals
     output wire [DATA_SZ-2:0] O_ADDR_SLV; // addr the slave
     output wire               O_RW;       // RW
@@ -94,6 +95,7 @@ module top_slv_i2c
          .I_ACK(I_ACK), 
          .I_MDL_LW_IO_SCL(mdl_lw_io_scl), 
          .I_MDL_HG_IO_SCL(mdl_hg_io_scl),
+         .I_DATA_WR(I_DATA_WR),
          .O_ADDR_SLV(O_ADDR_SLV), 
          .O_RW(O_RW), 
          .O_DATA_RD(O_DATA_RD), 
