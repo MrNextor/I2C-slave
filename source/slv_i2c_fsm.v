@@ -1,7 +1,7 @@
 module slv_i2c_fsm
     #(parameter DATA_SZ = 8) // data widht              
     (CLK, RST_n, I_SCL, I_SDA, I_RS_IO_SCL, I_FL_IO_SCL, I_RS_IO_SDA, I_FL_IO_SDA, I_ACK, I_MDL_LW_IO_SCL, I_MDL_HG_IO_SCL,
-     O_ADDR_SLV, O_RW, O_DATA_RD, O_ACK_MSTR, O_BUSY, O_SDA);
+     O_ADDR_SLV, O_RW, O_DATA_RD, O_ACK_MSTR, O_BUSY, O_DATA_VL, O_SDA);
      
 
 //--------------------------------------------------------------------------      
@@ -38,6 +38,7 @@ module slv_i2c_fsm
     output reg               O_ACK_MSTR; // ACK from the master
     output reg               O_SDA;      // O_SDA from the slave to the master
     output reg               O_BUSY;
+    output reg               O_DATA_VL;
 //  internal signals 
     reg [ST_SZ-1:0]           nx_st;           // next state of FSM 
     reg [DATA_SZ-2:0]         nx_o_addr_slv;   // next addr the slave
@@ -54,6 +55,7 @@ module slv_i2c_fsm
     reg                       go;
     reg                       nx_go;
     reg                       nx_o_busy;
+    reg                       nx_o_data_vl;
 /* //  internal signals 
     reg [COMM_SZ-1:0]         sh_reg;          // shift reg
     reg [COMM_SZ-1:0]         nx_sh_reg;       // shift reg
@@ -78,6 +80,7 @@ module slv_i2c_fsm
         nx_comm_slv = comm_slv;
         nx_go = go;
         nx_o_busy = O_BUSY;
+        nx_o_data_vl = O_DATA_VL;
 /*       
       nx_data_o_sda = O_SDA;
       nx_o_ack_fl = O_ACK_FL;
@@ -111,13 +114,14 @@ module slv_i2c_fsm
                                     nx_comm_slv = buff_rd;
                                     nx_o_addr_slv = buff_rd[DATA_SZ-1:1];
                                     nx_o_rw = buff_rd[0];
-                                    nx_o_busy = 1'b0;
+                                    nx_o_data_vl = 1'b1;
                                     if (I_MDL_LW_IO_SCL)
                                         begin
                                             nx_cnt_bit_data = DATA_SZ - 1'b1;
                                             nx_o_sda = I_ACK;
                                             nx_go = 1'b1;
                                             nx_st = ACK_COMM;
+                                            nx_o_data_vl = 1'b0;
                                         end
                                 end
                         end
@@ -134,13 +138,13 @@ module slv_i2c_fsm
                             if (I_RS_IO_SDA & I_SCL)
                                 begin
                                     nx_o_busy = 1'b0;
+                                    nx_o_data_vl = 1'b0;
                                     nx_st = IDLE;
                                 end
                             if (I_FL_IO_SCL & !go)
                                 begin
                                     nx_buff_rd = {buff_rd[DATA_SZ-2:0], I_SDA};
                                     nx_cnt_bit_data = DATA_SZ - 1'b1;
-                                    nx_o_busy = 1'b1;
                                     nx_st = RD;
                                 end
                             
@@ -154,12 +158,13 @@ module slv_i2c_fsm
                             if (&(!cnt_bit_data))
                                 begin
                                     nx_o_data_rd = buff_rd;
-                                    // добавить какой-нибудь сигнал, что адрес слейва и RW валидны
+                                    nx_o_data_vl = 1'b1;
                                     if (I_MDL_LW_IO_SCL)
                                         begin
                                             nx_cnt_bit_data = DATA_SZ - 1'b1;
                                             nx_o_sda = I_ACK;
                                             nx_go = 1'b1;
+                                            nx_o_data_vl = 1'b0;
                                             nx_st = ACK_COMM;
                                         end
                                 end
@@ -193,6 +198,7 @@ module slv_i2c_fsm
                 comm_slv <= {DATA_SZ{1'b0}};
                 go <= 1'b0;
                 O_BUSY <= 1'b0;
+                O_DATA_VL <= 1'b0;
             end
         else 
             begin
@@ -206,6 +212,7 @@ module slv_i2c_fsm
                 comm_slv <= nx_comm_slv;
                 go <= nx_go;
                 O_BUSY <= nx_o_busy;
+                O_DATA_VL <= nx_o_data_vl;
             end
     end
 
