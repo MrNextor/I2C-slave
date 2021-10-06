@@ -137,10 +137,11 @@ module slv_i2c_fsm
                                 end
                         end
             ACK_COMM :  begin
+                            if (I_FL_IO_SCL)
+                                nx_o_sda = 1'b1;
                             if (I_MDL_LW_IO_SCL)
                                 begin
                                     nx_go = 1'b0;
-                                    nx_o_sda = 1'b1;
                                     if (comm_slv[0])
                                         begin
                                             nx_buff_wr = {I_DATA_WR[DATA_SZ-2:0], 1'b0};
@@ -154,7 +155,7 @@ module slv_i2c_fsm
                                     nx_o_data_vl = 1'b0;
                                     nx_st = IDLE;
                                 end
-                            if (I_RS_IO_SCL & !go)
+                            if (I_FL_IO_SCL & !go)
                                 begin
                                     nx_buff_rd = {buff_rd[DATA_SZ-2:0], I_SDA};
                                     nx_cnt_bit_data = DATA_SZ - 1'b1;
