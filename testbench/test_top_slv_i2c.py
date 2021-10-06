@@ -68,7 +68,7 @@ async def test_top_slv_i2c(dut):
     addr = random.randrange(0, 2**7); rw = 0; 
     data.binstr = addr_rw_to_str(addr, rw);
     data.binstr = add_zero(data.binstr);
-# start I2C, transfer addr and RW, ACK from slave    
+    # start I2C, transfer addr and RW, ACK from slave    
     await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, data.binstr, dut.I_ACK)
     assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write2_1".format(data)  
     # transfer addr reg    
@@ -102,30 +102,36 @@ async def test_top_slv_i2c(dut):
     assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write3_1".format(data)  
     # transfer data from slave    
     dut.I_DATA_WR = data_from_slv_before = random.randrange(2**7, 2**8);
-    data_from_slv_after = await wr_slv(dut.I_SCL, dut.IO_SDA, data_from_slv_after)
+    data_from_slv_after = await wr_slv(dut.I_SCL, dut.IO_SDA)
     assert data_from_slv_before == data_from_slv_after, "Read the data was incorrect on written the {} data for read3_2".format(data_from_slv_after)  
     # ACK from master    
-    ack_mstr = 1;
+    ack_mstr = 0;
     await Timer(60, units="ns")     
     await mstr_ack(dut.I_SCL, dut.IO_SDA, ack_mstr)
+    # transfer data from slave    
+    dut.I_DATA_WR = data_from_slv_before = random.randrange(2**7, 2**8);
+    data_from_slv_after = await wr_slv(dut.I_SCL, dut.IO_SDA)
+    assert data_from_slv_before == data_from_slv_after, "Read the data was incorrect on written the {} data for read3_3".format(data_from_slv_after)      
     # stop I2C
     await Timer(60, units="ns")  
     await stop_i2c(dut.I_SCL, dut.IO_SDA)
     await Timer(1 / I2C_CLK_1_2, units="sec")
-#--------------------------------------------------------------------------  
 
-    
+
+#--------------------------------------------------------------------------      
 async def start_tr_addr_ack(IO_SCL, IO_SDA, addr_rw, ack):
     await start_i2c(IO_SCL, IO_SDA)            # start I2C
     await transaction(IO_SCL, IO_SDA, addr_rw) # transfer addr and rw  
     await ack_slv(ack, IO_SCL)                 # ACK from slave     
 
+#--------------------------------------------------------------------------    
 async def start_i2c(IO_SCL, IO_SDA):
     IO_SDA <= 0;
     await Timer(1 / I2C_CLK_1_4, units="sec")
     IO_SCL <= 0;
     await Timer(1 / I2C_CLK_1_4, units="sec")    
-    
+
+#--------------------------------------------------------------------------        
 async def transaction(IO_SCL, IO_SDA, data): 
     for i in data:
         IO_SDA <= int(i);
@@ -135,6 +141,7 @@ async def transaction(IO_SCL, IO_SDA, data):
         IO_SCL <= 0;
         await Timer(1 / I2C_CLK_1_4, units="sec")
 
+#--------------------------------------------------------------------------    
 async def ack_slv(ack, IO_SCL):
     ack <= 0;
     await Timer(1 / I2C_CLK_1_4, units="sec")
@@ -142,7 +149,8 @@ async def ack_slv(ack, IO_SCL):
     await Timer(1 / I2C_CLK_1_2, units="sec")
     IO_SCL <= 0;
     await Timer(1 / I2C_CLK_1_4, units="sec")
-    
+
+#--------------------------------------------------------------------------        
 async def stop_i2c(IO_SCL, IO_SDA):
     IO_SDA <= 0;
     await Timer(1 / I2C_CLK_1_4, units="sec")
@@ -150,7 +158,8 @@ async def stop_i2c(IO_SCL, IO_SDA):
     await Timer(1 / I2C_CLK_1_4, units="sec")
     IO_SDA <= 1;
 
-async def wr_slv(IO_SCL, IO_SDA, data_from_slv): 
+#--------------------------------------------------------------------------    
+async def wr_slv(IO_SCL, IO_SDA): 
     data_from_slv = [];
     string = '';
     for i in range(8):
@@ -164,25 +173,30 @@ async def wr_slv(IO_SCL, IO_SDA, data_from_slv):
     data_from_slv = int((string), base=2);
     return data_from_slv;
 
+#--------------------------------------------------------------------------    
 async def mstr_ack(IO_SCL, IO_SDA, ack_mstr):
     IO_SDA <= ack_mstr;
     await Timer(1 / I2C_CLK_1_4, units="sec")
     IO_SCL <= 1;
     await Timer(1 / I2C_CLK_1_2, units="sec")
     IO_SCL <= 0;
-    await Timer(1 / I2C_CLK_1_4, units="sec")    
-    
+    await Timer(1 / I2C_CLK_1_4, units="sec")
+    IO_SDA <= 1;
+
+#--------------------------------------------------------------------------        
 def what_save(IO_SDA, data_from_slv):
-    if IO_SDA.value.binstr == "z":
+    if IO_SDA.value.binstr == "z" or IO_SDA == 1:
         data_from_slv.append(1)
     else:
         data_from_slv.append(0)
     return data_from_slv;
 
+#--------------------------------------------------------------------------    
 def addr_rw_to_str(addr, rw):
     data = format(addr, 'b') + format(rw, 'b');
     return data;
-    
+
+#--------------------------------------------------------------------------        
 def add_zero(data):    
     if len(data) < 8:
         need = 8 - len(data);

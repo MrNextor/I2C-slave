@@ -178,14 +178,19 @@ module slv_i2c_fsm
                             if (I_RS_IO_SCL)
                                 begin
                                     nx_o_ack_mstr = I_SDA;
+                                    nx_o_data_vl = 1'b1;
                                     if (I_SDA)
                                         begin
+                                            nx_o_busy = 1'b0;
                                             nx_st = IDLE;
                                         end
-                                    else
-                                        begin
-                                            nx_st = WR;
-                                        end
+                                end
+                            if (I_MDL_LW_IO_SCL)
+                                begin
+                                    nx_buff_wr = {I_DATA_WR[DATA_SZ-2:0], 1'b0};
+                                    nx_o_sda = I_DATA_WR[DATA_SZ-1];
+                                    nx_o_data_vl = 1'b0;
+                                    nx_st = WR;
                                 end
                         end
             default  :  begin
