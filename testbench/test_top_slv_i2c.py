@@ -38,7 +38,8 @@ async def test_top_slv_i2c(dut):
     dut.I_SCL <= 1; 
     dut.IO_SDA <= 1;
     data = BinaryValue();
-    # data_from_slv = 0;
+    data_from_slv_before = 0;
+    data_from_slv_after = 0;
     await ClockCycles(dut.CLK, 2, rising=False) 
 
 #--------------------------------------------------------------------------   
@@ -86,8 +87,6 @@ async def test_top_slv_i2c(dut):
     await stop_i2c(dut.I_SCL, dut.IO_SDA)
     await Timer(1 / I2C_CLK_1_2, units="sec")
 
-
-
 #--------------------------------------------------------------------------   
 # start the third transaction    
     addr = random.randrange(0, 2**7); rw = 1; 
@@ -96,11 +95,10 @@ async def test_top_slv_i2c(dut):
     # start I2C, transfer addr and RW, ACK from slave    
     await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, data.binstr, dut.I_ACK)
     assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write3_1".format(data)  
-    
     # transfer data from slave    
-    dut.I_DATA_WR = random.randrange(2**7, 2**8);
-    await wr_slv(dut.I_SCL)
-    
+    dut.I_DATA_WR = data_from_slv_before = random.randrange(2**7, 2**8);
+    data_from_slv_after = await wr_slv(dut.I_SCL, dut.IO_SDA, data_from_slv_after)
+    assert data_from_slv_before == data_from_slv_after, "Read the data was incorrect on written the {} data for read3_2".format(data_from_slv_after)  
     await Timer(1 / I2C_CLK_1_2, units="sec")
 #--------------------------------------------------------------------------  
 
@@ -140,13 +138,26 @@ async def stop_i2c(IO_SCL, IO_SDA):
     await Timer(1 / I2C_CLK_1_4, units="sec")
     IO_SDA <= 1;
 
-async def wr_slv(IO_SCL): 
+async def wr_slv(IO_SCL, IO_SDA, data_from_slv): 
+    data_from_slv = [];
+    string = '';
     for i in range(8):
         await Timer(1 / I2C_CLK_1_4, units="sec")
-        IO_SCL <= 1;
+        IO_SCL <= 1; what_save(IO_SDA, data_from_slv)
         await Timer(1 / I2C_CLK_1_2, units="sec")
         IO_SCL <= 0;
         await Timer(1 / I2C_CLK_1_4, units="sec")
+    for i in data_from_slv:
+        string += str(i);
+    data_from_slv = int((string), base=2);
+    return data_from_slv;
+    
+def what_save(IO_SDA, data_from_slv):
+    if IO_SDA.value.binstr == "z":
+        data_from_slv.append(1)
+    else:
+        data_from_slv.append(0)
+    return data_from_slv;
 
 def addr_rw_to_str(addr, rw):
     data = format(addr, 'b') + format(rw, 'b');
@@ -160,6 +171,6 @@ def add_zero(data):
            data.insert(i, '0')
         string = '';
         for i in data:
-            string += i
+            string += i;
         data = string
     return data
