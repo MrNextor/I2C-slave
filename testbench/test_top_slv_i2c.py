@@ -37,91 +37,55 @@ async def test_top_slv_i2c(dut):
 # initial values
     dut.I_SCL <= 1; 
     dut.IO_SDA <= 1;
+    comm_slv = BinaryValue();
+    addr_reg = BinaryValue();
     data = BinaryValue();
+    addr_slv = BinaryValue();
     data_from_slv_before = 0;
     data_from_slv_after = 0;
     await ClockCycles(dut.CLK, 2, rising=False) 
 
 #--------------------------------------------------------------------------   
 # start the first transaction
-    addr = random.randrange(0, 2**7); rw = 0; 
-    data.binstr = addr_rw_to_str(addr, rw);
-    data.binstr = add_zero(data.binstr);
+    addr_slv = addr = random.randrange(0, 2**7); rw = 0; 
+    comm_slv.binstr = addr_rw_to_str(addr, rw);
+    comm_slv.binstr = add_zero(comm_slv.binstr);
     # start I2C, transfer addr and RW, ACK from slave    
-    await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, data.binstr, dut.I_ACK)
-    assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write1_1".format(data)  
-    # transfer addr_reg    
+    await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, comm_slv.binstr, dut.I_ACK, dut.O_CH_CNCT)
+    # assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write1_1".format(data)  
+# transfer addr_reg    
+    addr_reg.integer = random.randrange(0, 2**8);
+    addr_reg.binstr = add_zero(addr_reg.binstr);
+    await Timer(60, units="ns")
+    await transaction(dut.I_SCL, dut.IO_SDA, addr_reg.binstr)
+    # assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write1_2".format(data)
+    # ACK from slave    
+    await ack_slv(dut.I_ACK, dut.I_SCL)
+# transfer addr_reg    
     data.integer = random.randrange(0, 2**8);
     data.binstr = add_zero(data.binstr);
     await Timer(60, units="ns")
     await transaction(dut.I_SCL, dut.IO_SDA, data.binstr)
-    assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write1_2".format(data)
-    # ACK from slave    
-    await ack_slv(dut.I_ACK, dut.I_SCL)
+    
+    assert dut.O_ADDR_SLV.value == addr_slv, ""
+    assert dut.O_RW.value == rw, ""
+    assert dut.O_ADDR_REG.value == addr_reg, ""
+    assert dut.O_DATA_RD.value == data, "buff_rd was incorrect on the {} data for write1_2".format(data)
+    
+    
     # stop I2C
     await Timer(60, units="ns")    
     await stop_i2c(dut.I_SCL, dut.IO_SDA)
     await Timer(1 / I2C_CLK_1_2, units="sec")     
  
-#--------------------------------------------------------------------------    
-# start the second transaction 
-    addr = random.randrange(0, 2**7); rw = 0; 
-    data.binstr = addr_rw_to_str(addr, rw);
-    data.binstr = add_zero(data.binstr);
-    # start I2C, transfer addr and RW, ACK from slave    
-    await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, data.binstr, dut.I_ACK)
-    assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write2_1".format(data)  
-    # transfer addr reg    
-    data.integer = random.randrange(0, 2**8);
-    data.binstr = add_zero(data.binstr);
-    await Timer(60, units="ns")  
-    await transaction(dut.I_SCL, dut.IO_SDA, data.binstr)
-    assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write2_2".format(data)
-    # ACK from slave    
-    await ack_slv(dut.I_ACK, dut.I_SCL)
-    # transfer data  
-    data.integer = random.randrange(0, 2**8);
-    data.binstr = add_zero(data.binstr);
-    await Timer(60, units="ns")  
-    await transaction(dut.I_SCL, dut.IO_SDA, data.binstr)
-    assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write2_3".format(data)
-    # ACK from slave    
-    await ack_slv(dut.I_ACK, dut.I_SCL)
-    # stop I2C
-    await Timer(60, units="ns")  
-    await stop_i2c(dut.I_SCL, dut.IO_SDA)
-    await Timer(1 / I2C_CLK_1_2, units="sec")
 
-#--------------------------------------------------------------------------   
-# start the third transaction    
-    addr = random.randrange(0, 2**7); rw = 1; 
-    data.binstr = addr_rw_to_str(addr, rw);
-    data.binstr = add_zero(data.binstr);
-    # start I2C, transfer addr and RW, ACK from slave    
-    await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, data.binstr, dut.I_ACK)
-    assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write3_1".format(data)  
-    # transfer data from slave    
-    dut.I_DATA_WR = data_from_slv_before = random.randrange(2**7, 2**8);
-    data_from_slv_after = await wr_slv(dut.I_SCL, dut.IO_SDA)
-    assert data_from_slv_before == data_from_slv_after, "Read the data was incorrect on written the {} data for read3_2".format(data_from_slv_after)  
-    # ACK from master    
-    ack_mstr = 0;
-    await Timer(60, units="ns")     
-    await mstr_ack(dut.I_SCL, dut.IO_SDA, ack_mstr)
-    # transfer data from slave    
-    dut.I_DATA_WR = data_from_slv_before = random.randrange(2**7, 2**8);
-    data_from_slv_after = await wr_slv(dut.I_SCL, dut.IO_SDA)
-    assert data_from_slv_before == data_from_slv_after, "Read the data was incorrect on written the {} data for read3_3".format(data_from_slv_after)      
-    # stop I2C
-    await Timer(60, units="ns")  
-    await stop_i2c(dut.I_SCL, dut.IO_SDA)
-    await Timer(1 / I2C_CLK_1_2, units="sec")
 
 
 #--------------------------------------------------------------------------      
-async def start_tr_addr_ack(IO_SCL, IO_SDA, addr_rw, ack):
+async def start_tr_addr_ack(IO_SCL, IO_SDA, addr_rw, ack, O_CH_CNCT):
     await start_i2c(IO_SCL, IO_SDA)            # start I2C
     await transaction(IO_SCL, IO_SDA, addr_rw) # transfer addr and rw  
+    assert O_CH_CNCT == 1, "O_CH_CNCT was incorrect"
     await ack_slv(ack, IO_SCL)                 # ACK from slave     
 
 #--------------------------------------------------------------------------    
