@@ -148,14 +148,12 @@ module slv_i2c_fsm
                             if (I_RS_IO_SDA & I_SCL)
                                 begin
                                     nx_o_busy = 1'b0;
-                                    // nx_pr_comm_slv = comm_slv;
                                     nx_st = IDLE;
                                 end
                             if (I_FL_IO_SCL & !go)
                                 begin
                                     nx_buff_rd = {buff_rd[DATA_SZ-2:0], I_SDA};
                                     nx_st = ADDR_REG;
-                                    // nx_cnt_bit_data = DATA_SZ - 1'b1;
                                 end
                         end
             ADDR_REG :  begin
@@ -166,9 +164,6 @@ module slv_i2c_fsm
                                 end
                             if (&(!cnt_bit_data))
                                 begin
-                                    // nx_o_rw = 1'b0;
-                                    // nx_o_addr_slv = comm_slv[DATA_SZ-1:1];
-                                    // nx_o_data_vl = 1'b1;                                    
                                     nx_o_addr_reg = buff_rd;
                                     nx_addr_reg_offset = {DATA_SZ{1'b0}};
                                     if (I_MDL_LW_IO_SCL)
@@ -177,7 +172,6 @@ module slv_i2c_fsm
                                             nx_o_sda = ack_from_slave;
                                             nx_go = 1'b1;
                                             nx_st = ACK_DATA;
-                                            // nx_o_data_vl = 1'b0; 
                                         end
                                 end
                         end
@@ -188,12 +182,9 @@ module slv_i2c_fsm
                                     nx_go = 1'b0;
                                     nx_o_sda = 1'b1; 
                                 end
-                            
-                            
                             if (I_RS_IO_SDA & I_SCL)
                                 begin
                                     nx_o_busy = 1'b0;
-                                    // nx_o_data_vl = 1'b0;
                                     nx_st = IDLE;
                                     nx_pr_addr_reg = O_ADDR_REG;
                                     nx_pr_comm_slv = comm_slv;
@@ -213,7 +204,6 @@ module slv_i2c_fsm
                                         end
                                 end
                         end       
-            
             RD       :  begin
                             if (I_RS_IO_SCL)
                                 begin
@@ -236,11 +226,6 @@ module slv_i2c_fsm
                                         end
                                 end
                         end
-            
-            
-            
-            
-            
             WR       :  begin
                             if (I_MDL_LW_IO_SCL)
                                 begin
