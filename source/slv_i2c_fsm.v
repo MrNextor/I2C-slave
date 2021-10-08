@@ -64,7 +64,9 @@ module slv_i2c_fsm
     reg [DATA_SZ-1:0]         nx_pr_comm_slv;
     reg [DATA_SZ-1:0]         nx_pr_addr_reg;
     reg [DATA_SZ-1:0]         addr_reg_offset;
-    reg [DATA_SZ-1:0]         nx_addr_reg_offset;    
+    reg [DATA_SZ-1:0]         nx_addr_reg_offset;
+    reg                       ack_from_slave;
+    reg                       nx_ack_from_slave;
  
 //  determining next state of FSM and signals
     always @(*) begin
@@ -85,6 +87,7 @@ module slv_i2c_fsm
         nx_pr_comm_slv = pr_comm_slv;
         nx_pr_addr_reg = pr_addr_reg;
         nx_addr_reg_offset = addr_reg_offset;
+        nx_ack_from_slave = ack_from_slave;
         case (st)    
             IDLE     :  begin
                             if (I_FL_IO_SDA & I_SCL)
@@ -128,6 +131,7 @@ module slv_i2c_fsm
                                         begin
                                             nx_cnt_bit_data = DATA_SZ - 1'b1;
                                             nx_o_sda = I_ACK;
+                                            nx_ack_from_slave = I_ACK;
                                             nx_go = 1'b1;
                                             nx_o_ch_cnct = 1'b0;
                                             nx_o_data_vl = 1'b0;
@@ -176,7 +180,7 @@ module slv_i2c_fsm
                                     if (I_MDL_LW_IO_SCL)
                                         begin
                                             nx_cnt_bit_data = DATA_SZ - 1'b1;
-                                            nx_o_sda = I_ACK;
+                                            nx_o_sda = ack_from_slave;
                                             nx_go = 1'b1;
                                             nx_st = ACK_DATA;
                                             // nx_o_data_vl = 1'b0; 
@@ -219,17 +223,17 @@ module slv_i2c_fsm
                                 end
                             if (&(!cnt_bit_data))
                                 begin
-                                    nx_o_addr_reg = O_ADDR_REG + addr_reg_offset;
+                                    nx_o_addr_reg = &(!addr_reg_offset) ? O_ADDR_REG : addr_reg_offset;
                                     nx_o_data_rd = buff_rd;
                                     nx_o_data_vl = 1'b1;
                                     if (I_MDL_LW_IO_SCL)
                                         begin
                                             nx_cnt_bit_data = DATA_SZ - 1'b1;
-                                            nx_o_sda = I_ACK;
+                                            nx_o_sda = ack_from_slave;
                                             nx_go = 1'b1;
                                             nx_o_data_vl = 1'b0;
                                             nx_st = ACK_DATA;
-                                            nx_addr_reg_offset = addr_reg_offset + 1'b1;
+                                            nx_addr_reg_offset = O_ADDR_REG + 1'b1;
                                         end
                                 end
                         end
@@ -308,6 +312,7 @@ module slv_i2c_fsm
                 pr_comm_slv <= {DATA_SZ{1'b0}};
                 pr_addr_reg <= {DATA_SZ{1'b0}}; 
                 addr_reg_offset <= {DATA_SZ{1'b0}};
+                ack_from_slave <= 1'b1;
             end
         else 
             begin
@@ -328,6 +333,7 @@ module slv_i2c_fsm
                 pr_comm_slv <= nx_pr_comm_slv;
                 pr_addr_reg <= nx_pr_addr_reg;
                 addr_reg_offset <= nx_addr_reg_offset;
+                ack_from_slave <= nx_ack_from_slave;
             end
     end
 

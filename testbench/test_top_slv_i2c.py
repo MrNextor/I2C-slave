@@ -1,19 +1,17 @@
 # test_top_slv_i2c.py
 
-import cocotb
 import random
+import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge
-from cocotb.triggers import RisingEdge
-from cocotb.triggers import ClockCycles
-from cocotb.triggers import Timer
+from cocotb.triggers import FallingEdge, RisingEdge, ClockCycles, Timer
 from cocotb.binary import BinaryValue
 
-
+#--------------------------------------------------------------------------
 I2C_CLK  = 100e3;
 I2C_CLK_1_2 = 100e3 * 2;
 I2C_CLK_1_4 = 100e3 * 4;
 
+#--------------------------------------------------------------------------
 @cocotb.test()
 async def test_top_slv_i2c(dut):
     """ Test def_freq_i2c.v """
@@ -38,55 +36,49 @@ async def test_top_slv_i2c(dut):
     dut.I_SCL <= 1; 
     dut.IO_SDA <= 1;
     comm_slv = BinaryValue();
+    addr_slv = BinaryValue();
     addr_reg = BinaryValue();
     data = BinaryValue();
-    addr_slv = BinaryValue();
     data_from_slv_before = 0;
     data_from_slv_after = 0;
     await ClockCycles(dut.CLK, 2, rising=False) 
 
 #--------------------------------------------------------------------------   
-# start the first transaction
+# start the first transaction, writting of two bytes
     addr_slv = addr = random.randrange(0, 2**7); rw = 0; 
     comm_slv.binstr = addr_rw_to_str(addr, rw);
     comm_slv.binstr = add_zero(comm_slv.binstr);
-    # start I2C, transfer addr and RW, ACK from slave    
-    await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, comm_slv.binstr, dut.I_ACK, dut.O_CH_CNCT)
-    # assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write1_1".format(data)  
+# start I2C, transfer addr and RW, ACK from slave    
+    await start_tr_addr_ack(dut.I_SCL, dut.IO_SDA, comm_slv.binstr, dut.I_ACK, dut.O_CH_CNCT) 
 # transfer addr_reg    
     addr_reg.integer = random.randrange(0, 2**8);
     addr_reg.binstr = add_zero(addr_reg.binstr);
     await Timer(60, units="ns")
     await transaction(dut.I_SCL, dut.IO_SDA, addr_reg.binstr)
-    # assert dut.slv_i2c_fsm.buff_rd.value == data, "buff_rd was incorrect on the {} data for write1_2".format(data)
-    # ACK from slave    
-    await ack_slv(dut.I_ACK, dut.I_SCL)
-# transfer addr_reg    
-    data.integer = random.randrange(0, 2**8);
-    data.binstr = add_zero(data.binstr);
-    await Timer(60, units="ns")
-    await transaction(dut.I_SCL, dut.IO_SDA, data.binstr)
-    
-    assert dut.O_ADDR_SLV.value == addr_slv, ""
-    assert dut.O_RW.value == rw, ""
-    assert dut.O_ADDR_REG.value == addr_reg, ""
-    assert dut.O_DATA_RD.value == data, "buff_rd was incorrect on the {} data for write1_2".format(data)
-    
-    
-    # stop I2C
+# ACK from slave
+    await ack_slv(dut.I_SCL)
+# transfer data 
+    i = 0; num_byte = 2;
+    while i < num_byte:
+        data.integer = random.randrange(0, 2**8);
+        data.binstr = add_zero(data.binstr);
+        await Timer(60, units="ns")
+        await transaction(dut.I_SCL, dut.IO_SDA, data.binstr)
+        check_writting(dut.O_ADDR_SLV.value, addr_slv, dut.O_RW.value, rw, dut.O_ADDR_REG.value, addr_reg, dut.O_DATA_RD.value, data, dut.O_DATA_VL, i)
+        await ack_slv(dut.I_SCL)
+        i += 1;
+# stop I2C
     await Timer(60, units="ns")    
     await stop_i2c(dut.I_SCL, dut.IO_SDA)
     await Timer(1 / I2C_CLK_1_2, units="sec")     
- 
-
 
 
 #--------------------------------------------------------------------------      
 async def start_tr_addr_ack(IO_SCL, IO_SDA, addr_rw, ack, O_CH_CNCT):
     await start_i2c(IO_SCL, IO_SDA)            # start I2C
     await transaction(IO_SCL, IO_SDA, addr_rw) # transfer addr and rw  
-    assert O_CH_CNCT == 1, "O_CH_CNCT was incorrect"
-    await ack_slv(ack, IO_SCL)                 # ACK from slave     
+    assert O_CH_CNCT == 1, "O_CH_CNCT was incorrect 1"
+    await ack_start(ack, IO_SCL)               # ACK from slave     
 
 #--------------------------------------------------------------------------    
 async def start_i2c(IO_SCL, IO_SDA):
@@ -106,8 +98,12 @@ async def transaction(IO_SCL, IO_SDA, data):
         await Timer(1 / I2C_CLK_1_4, units="sec")
 
 #--------------------------------------------------------------------------    
-async def ack_slv(ack, IO_SCL):
+async def ack_start(ack, IO_SCL):
     ack <= 0;
+    await ack_slv(IO_SCL)
+    
+#-------------------------------------------------------------------------- 
+async def ack_slv(IO_SCL):
     await Timer(1 / I2C_CLK_1_4, units="sec")
     IO_SCL <= 1;
     await Timer(1 / I2C_CLK_1_2, units="sec")
@@ -125,7 +121,7 @@ async def stop_i2c(IO_SCL, IO_SDA):
 #--------------------------------------------------------------------------    
 async def wr_slv(IO_SCL, IO_SDA): 
     data_from_slv = [];
-    string = '';
+    string = "";
     for i in range(8):
         await Timer(1 / I2C_CLK_1_4, units="sec")
         IO_SCL <= 1; what_save(IO_SDA, data_from_slv)
@@ -157,7 +153,7 @@ def what_save(IO_SDA, data_from_slv):
 
 #--------------------------------------------------------------------------    
 def addr_rw_to_str(addr, rw):
-    data = format(addr, 'b') + format(rw, 'b');
+    data = format(addr, "b") + format(rw, "b");
     return data;
 
 #--------------------------------------------------------------------------        
@@ -166,9 +162,16 @@ def add_zero(data):
         need = 8 - len(data);
         data = list(data);
         for i in range(need):
-           data.insert(i, '0')
-        string = '';
+           data.insert(i, "0")
+        string = "";
         for i in data:
             string += i;
         data = string
     return data
+   
+def check_writting(O_ADDR_SLV, addr_slv, O_RW, rw, O_ADDR_REG, addr_reg, O_DATA_RD, data, O_DATA_VL, i):
+    assert O_ADDR_SLV == addr_slv, "O_ADDR_SLV was incorrect on the {} addr_slv for write in {} loop" .format(addr_slv, i)
+    assert O_RW == rw, "O_RW was incorrect on the {} rw for write in {} loop" .format(rw, i)
+    assert O_ADDR_REG == addr_reg + i, "O_ADDR_REG was incorrect on the {} addr_reg for write in {} loop" .format(addr_reg, i)
+    assert O_DATA_RD == data, "O_DATA_RD was incorrect on the {} data for write in {} loop" .format(data, i)
+    assert O_DATA_VL == 1, "O_DATA_VL was incorrect 1 in {} loop" .format(i)      
