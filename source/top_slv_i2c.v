@@ -1,40 +1,40 @@
 module top_slv_i2c
-    #(parameter FPGA_CLK = 50_000_000,  // FPGA frequency 50 MHz
-      parameter I2C_CLK  = 100_000,     // I2C bus frequency 400 KHz
-      parameter DATA_SZ  = 8)           // data widht
+    #(parameter FPGA_CLK = 50_000_000, // FPGA frequency 50 MHz
+      parameter I2C_CLK  = 100_000,    // I2C bus frequency 400 KHz
+      parameter DATA_SZ  = 8)          // data widht
     (CLK, RST_n, I_ACK, I_SCL, I_DATA_WR,
-     O_ADDR_SLV, O_RW, O_DATA_RD, O_BUSY, O_DATA_VL, O_ADDR_REG, O_CH_CNCT,
+     O_ADDR_SLV, O_RW, O_ADDR_REG, O_DATA_RD, O_BUSY, O_CH_CNCT, O_DATA_VL,  
      IO_SDA);
 
     
 //--------------------------------------------------------------------------    
 //  input signals
-    input wire                CLK;       // clock 50 MHz
-    input wire                RST_n;     // asynchronous reset_n
-    input wire I_SCL; // serial clock I2C bus 
-    input wire I_ACK;
-    input wire [DATA_SZ-1:0] I_DATA_WR;   // data for writing to the master    
+    input wire               CLK;       // clock 50 MHz
+    input wire               RST_n;     // asynchronous reset_n
+    input wire               I_SCL;     // serial clock I2C bus 
+    input wire               I_ACK;     // ACK from the slave
+    input wire [DATA_SZ-1:0] I_DATA_WR; // data for writing to the master    
 //  output signals
     output wire [DATA_SZ-2:0] O_ADDR_SLV; // addr the slave
     output wire               O_RW;       // RW
-    output wire [DATA_SZ-1:0] O_DATA_RD;  // read data from the master
-    output wire               O_BUSY;
-    output wire               O_DATA_VL;
     output wire [DATA_SZ-1:0] O_ADDR_REG; // addr the slave
+    output wire [DATA_SZ-1:0] O_DATA_RD;  // read data from the master
+    output wire               O_BUSY;     // busy 
     output wire               O_CH_CNCT;  // check connection
+    output wire               O_DATA_VL;  // valid data
 //  bidirectional signals
-    inout wire IO_SDA; // serial data I2C bus
+    inout wire                IO_SDA;     // serial data I2C bus
 //  internal signals        
-    wire               mdl_lw_io_scl;     // enable I2_C slave to transmit a bit    
-    wire               mdl_hg_io_scl;     
+    wire mdl_lw_io_scl; // enable I2_C slave to transmit a bit    
+    wire mdl_hg_io_scl;     
     wire sda;
     wire sda_out;
-    reg cr_sda;
-    reg pr_sda;
+    reg  cr_sda;
+    reg  pr_sda;
     wire rs_sda;
     wire fl_sda;
-    reg cr_scl;
-    reg pr_scl;
+    reg  cr_scl;
+    reg  pr_scl;
     wire rs_scl;
     wire fl_scl;
     
@@ -99,22 +99,22 @@ module top_slv_i2c
          .I_DATA_WR(I_DATA_WR),
          .O_ADDR_SLV(O_ADDR_SLV), 
          .O_RW(O_RW), 
+         .O_ADDR_REG(O_ADDR_REG),
          .O_DATA_RD(O_DATA_RD), 
          .O_SDA(sda_out),
          .O_BUSY(O_BUSY),
-         .O_DATA_VL(O_DATA_VL),
-         .O_ADDR_REG(O_ADDR_REG),
-         .O_CH_CNCT(O_CH_CNCT)
+         .O_CH_CNCT(O_CH_CNCT),
+         .O_DATA_VL(O_DATA_VL)
         );        
-      
-        
-        
+
+//--------------------------------------------------------------------------         
 `ifdef COCOTB_SIM
-initial begin
-  $dumpfile ("top_slv_i2c.vcd");
-  $dumpvars (0, top_slv_i2c);
-  #1;
-end
+    initial begin
+      $dumpfile ("top_slv_i2c.vcd");
+      $dumpvars (0, top_slv_i2c);
+      #1;
+    end
 `endif
+ 
  
 endmodule
