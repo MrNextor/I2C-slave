@@ -41,7 +41,7 @@ async def test_top_slv_i2c(dut):
     await ClockCycles(dut.CLK, 2, rising=False) 
 
 #--------------------------------------------------------------------------   
-# start the first transaction, writting of two bytes
+# start the first transaction, writing
     await start_tr_addr(dut, write.addr_slv_wr()) # start I2C, transfer addr and RW  
     check_start_wr(dut, write) # check
     await ack_start(dut) # ACK from slave 
@@ -53,7 +53,7 @@ async def test_top_slv_i2c(dut):
     for i in range(num_byte):
         await Timer(60, units="ns")
         await transaction(dut, write.data())
-        check_writting(dut, write, i) # check
+        check_writing(dut, write, i) # check
         await ack_slv(dut)
         write.new_data(); # overwrite data
 # stop I2C
@@ -62,8 +62,8 @@ async def test_top_slv_i2c(dut):
     await Timer(1 / I2C_CLK_1_2, units="sec")     
 
 #--------------------------------------------------------------------------   
-# start the second transaction, reading of two bytes
-    await start_tr_addr(dut, read.addr_slv_wr()) # start I2C, transfer addr and RW, ACK from slave  
+# start the second transaction, reading
+    await start_tr_addr(dut, read.addr_slv_wr()) # start I2C, transfer addr and RW
     check_start_wr(dut, read) # check
     await ack_start(dut) # ACK from slave  
     await Timer(60, units="ns")    
@@ -73,7 +73,7 @@ async def test_top_slv_i2c(dut):
     await Timer(60, units="ns")    
     await stop_i2c(dut)
     await Timer(1 / I2C_CLK_1_2, units="sec") 
-# start I2C, transfer addr and RW, ACK from slave    
+# start I2C, transfer addr and RW    
     await start_tr_addr(dut, read.addr_slv_rd())
     check_start_rd(dut, read)
     await ack_start(dut) # ACK from slave 
@@ -188,7 +188,7 @@ def check_start_rd(dut, read):
     assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2), "O_ADDR_REG was incorrect on the {} addr reg for write" .format(read.addr_reg())
 
 #--------------------------------------------------------------------------     
-def check_writting(dut, write, i):
+def check_writing(dut, write, i):
     assert dut.O_DATA_VL.value == True, "O_DATA_VL was incorrect on the 1 in {} loop" .format(i)      
     assert dut.O_ADDR_SLV.value == int(write.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr slave for write in {} loop" .format(write.addr_slv(), i)
     assert dut.O_RW.value == int(write.rw_wr()), "O_RW was incorrect on the {} rw in {} loop" .format(write.rw_wr(), i)
