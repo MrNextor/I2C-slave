@@ -3,30 +3,30 @@ module top_slv_i2c
       parameter I2C_CLK  = 100_000,    // I2C bus frequency 400 KHz
       parameter DATA_SZ  = 8)          // data widht
     (CLK, RST_n, I_ACK, I_SCL, I_DATA_WR,
-     O_ADDR_SLV, O_RW, O_ADDR_REG, O_DATA_RD, O_BUSY, O_CH_CNCT, O_DATA_VL,  
+     O_ADDR_SLV, O_RW, O_ADDR_REG, O_DATA_RD, O_BUSY, O_CH_CNCT, O_DATA_VL,
      IO_SDA);
 
-    
-//--------------------------------------------------------------------------    
+
+//--------------------------------------------------------------------------
 //  input signals
     input wire               CLK;       // clock 50 MHz
     input wire               RST_n;     // asynchronous reset_n
-    input wire               I_SCL;     // serial clock I2C bus 
+    input wire               I_SCL;     // serial clock I2C bus
     input wire               I_ACK;     // ACK from the slave
-    input wire [DATA_SZ-1:0] I_DATA_WR; // data for writing to the master    
+    input wire [DATA_SZ-1:0] I_DATA_WR; // data for writing to the master
 //  output signals
     output wire [DATA_SZ-2:0] O_ADDR_SLV; // addr the slave
     output wire               O_RW;       // RW
     output wire [DATA_SZ-1:0] O_ADDR_REG; // addr the slave
     output wire [DATA_SZ-1:0] O_DATA_RD;  // read data from the master
-    output wire               O_BUSY;     // busy 
+    output wire               O_BUSY;     // busy
     output wire               O_CH_CNCT;  // check connection
     output wire               O_DATA_VL;  // valid data
 //  bidirectional signals
     inout wire                IO_SDA;     // serial data I2C bus
-//  internal signals        
-    wire mdl_lw_io_scl; // enable I2_C slave to transmit a bit    
-    wire mdl_hg_io_scl;     
+//  internal signals
+    wire mdl_lw_io_scl; // enable I2_C slave to transmit a bit
+    wire mdl_hg_io_scl;
     wire sda;
     wire sda_out;
     reg  cr_sda;
@@ -37,8 +37,8 @@ module top_slv_i2c
     reg  pr_scl;
     wire rs_scl;
     wire fl_scl;
-    
-//--------------------------------------------------------------------------       
+
+//--------------------------------------------------------------------------
     assign sda    = IO_SDA;
     assign IO_SDA = sda_out ? 1'bz : 1'b0;
     assign rs_sda = cr_sda & !pr_sda;
@@ -46,7 +46,7 @@ module top_slv_i2c
     assign rs_scl = cr_scl & !pr_scl;
     assign fl_scl = !cr_scl & pr_scl;
 
-//--------------------------------------------------------------------------       
+//--------------------------------------------------------------------------
     always @(posedge CLK or negedge RST_n) begin
         if (!RST_n)
             begin
@@ -64,50 +64,50 @@ module top_slv_i2c
             end
     end
 
-//-------------------------------------------------------------------------- 
+//--------------------------------------------------------------------------
     def_freq_i2c
          #(
          .FPGA_CLK(FPGA_CLK),
          .I2C_CLK(I2C_CLK)
-        ) 
-    def_freq_i2c    
+        )
+    def_freq_i2c
 		  (
-         .CLK(CLK), 
+         .CLK(CLK),
          .RST_n(RST_n),
-         .I_SCL(I_SCL), 
+         .I_SCL(I_SCL),
          .I_RS_IO_SCL(rs_scl),
-         .I_FL_IO_SCL(fl_scl),         
+         .I_FL_IO_SCL(fl_scl),
          .O_MDL_LW_IO_SCL(mdl_lw_io_scl),
          .O_MDL_HG_IO_SCL(mdl_hg_io_scl)
         );
-   
-//--------------------------------------------------------------------------     
+
+//--------------------------------------------------------------------------
     slv_i2c_fsm
         #(.DATA_SZ(DATA_SZ))
     slv_i2c_fsm
         (
-         .CLK(CLK), 
-         .RST_n(RST_n), 
-         .I_SCL(I_SCL), 
-         .I_SDA(sda), 
-         .I_RS_IO_SCL(rs_scl), 
-         .I_FL_IO_SCL(fl_scl), 
-         .I_RS_IO_SDA(rs_sda), 
-         .I_FL_IO_SDA(fl_sda), 
-         .I_ACK(I_ACK), 
-         .I_MDL_LW_IO_SCL(mdl_lw_io_scl), 
+         .CLK(CLK),
+         .RST_n(RST_n),
+         .I_SCL(I_SCL),
+         .I_SDA(sda),
+         .I_RS_IO_SCL(rs_scl),
+         .I_FL_IO_SCL(fl_scl),
+         .I_RS_IO_SDA(rs_sda),
+         .I_FL_IO_SDA(fl_sda),
+         .I_ACK(I_ACK),
+         .I_MDL_LW_IO_SCL(mdl_lw_io_scl),
          .I_DATA_WR(I_DATA_WR),
-         .O_ADDR_SLV(O_ADDR_SLV), 
-         .O_RW(O_RW), 
+         .O_ADDR_SLV(O_ADDR_SLV),
+         .O_RW(O_RW),
          .O_ADDR_REG(O_ADDR_REG),
-         .O_DATA_RD(O_DATA_RD), 
+         .O_DATA_RD(O_DATA_RD),
          .O_SDA(sda_out),
          .O_BUSY(O_BUSY),
          .O_CH_CNCT(O_CH_CNCT),
          .O_DATA_VL(O_DATA_VL)
-        );        
+        );
 
-//--------------------------------------------------------------------------         
+//--------------------------------------------------------------------------
 `ifdef COCOTB_SIM
     initial begin
       $dumpfile ("top_slv_i2c.vcd");
@@ -115,6 +115,6 @@ module top_slv_i2c
       #1;
     end
 `endif
- 
- 
+
+
 endmodule
