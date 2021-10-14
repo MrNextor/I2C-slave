@@ -143,17 +143,13 @@ async def stop_i2c(dut):
 #--------------------------------------------------------------------------
 async def wr_slv(dut):
     data_from_slv = [];
-    string = "";
     for i in range(8):
         await Timer(1 / I2C_CLK_1_4, units="sec")
         dut.I_SCL <= 1; what_save(dut, data_from_slv)
         await Timer(1 / I2C_CLK_1_2, units="sec")
         dut.I_SCL <= 0;
         await Timer(1 / I2C_CLK_1_4, units="sec")
-    for i in data_from_slv:
-        string += str(i);
-    data_from_slv = int((string), base=2);
-    return data_from_slv;
+    return int(("".join(data_from_slv)), base=2);
 
 #--------------------------------------------------------------------------
 async def mstr_ack(dut, read, ack_mstr, i):
@@ -170,9 +166,9 @@ async def mstr_ack(dut, read, ack_mstr, i):
 #--------------------------------------------------------------------------
 def what_save(dut, data_from_slv):
     if dut.IO_SDA.value.binstr == "z" or dut.IO_SDA == 1:
-        data_from_slv.append(1)
+        data_from_slv.append("1")
     else:
-        data_from_slv.append(0)
+        data_from_slv.append("0")
     return data_from_slv;
 
 #--------------------------------------------------------------------------
