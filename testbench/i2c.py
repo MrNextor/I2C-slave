@@ -70,11 +70,10 @@ class Read:
 def add_zero(data:str, sz:int=8) -> str:
     """ Extends data to sz bits """
     if len(data) < sz:
-        need = sz - len(data);
         data = list(data);
-        for i in range(need):
-           data.insert(i, "0")
         string = "";
+        for i in range(sz - len(data)):
+           data.insert(i, "0")
         for i in data:
             string += i;
         data = string

@@ -79,7 +79,7 @@ async def test_top_slv_i2c(dut):
     check_start_rd(dut, read)
     await ack_start(dut) # ACK from slave
 # transfer data
-    num_byte = 2; ack_mstr = 0;
+    num_byte = 4; ack_mstr = 0;
     for i in range(num_byte):
         dut.I_DATA_WR = int(read.data_from_slv(), base=2);
         data_from_slv_after = await wr_slv(dut)
@@ -189,7 +189,7 @@ def check_writing(dut, write, i):
     assert dut.O_DATA_VL.value == True, "O_DATA_VL was incorrect on the 1 in {} loop" .format(i)
     assert dut.O_ADDR_SLV.value == int(write.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr slave for write in {} loop" .format(write.addr_slv(), i)
     assert dut.O_RW.value == int(write.rw_wr()), "O_RW was incorrect on the {} rw in {} loop" .format(write.rw_wr(), i)
-    assert dut.O_ADDR_REG.value == int(write.addr_reg(), base=2) + i, "O_ADDR_REG was incorrect on the {} addr reg for write in {} loop" .format(write.addr_reg(), i)
+    assert dut.O_ADDR_REG.value == int(write.addr_reg(), base=2) + i, "O_ADDR_REG was incorrect on the {} addr reg for write in {} loop" .format(format(int(write.addr_reg(), base=2) + i, "b"), i)
     assert dut.O_DATA_RD.value == int(write.data(), base=2), "O_DATA_RD was incorrect on the {} data for write in {} loop" .format(write.data(), i)
 
 #--------------------------------------------------------------------------
@@ -200,5 +200,5 @@ def check_reading(dut, read, ack_mstr, i):
         valid = 1;
     assert dut.O_ADDR_SLV.value == int(read.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr_slv for write in {} loop" .format(read.addr_slv(), i)
     assert dut.O_RW.value == int(read.rw_rd()), "O_RW was incorrect on the {} rw for write in {} loop" .format(read.rw_rd(), i)
-    assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2) + i, "O_ADDR_REG was incorrect on the {} addr_reg for write in {} loop" .format(read.addr_reg(), i)
+    assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2) + i, "O_ADDR_REG was incorrect on the {} addr_reg for write in {} loop" .format(format(int(read.addr_reg(), base=2) + i, "b"), i)
     assert dut.O_DATA_VL.value == valid, "O_DATA_VL was incorrect {} in {} loop" .format(valid, i)
