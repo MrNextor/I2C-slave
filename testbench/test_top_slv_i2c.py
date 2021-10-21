@@ -174,23 +174,23 @@ def what_save(dut, data_from_slv):
 #--------------------------------------------------------------------------
 def check_start_wr(dut, wr_rd):
     assert dut.O_CH_CNCT.value == True, "O_CH_CNCT was incorrect on the 1"
-    assert dut.O_ADDR_SLV.value == int(wr_rd.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr slave for write" .format(wr_rd.addr_slv())
-    assert dut.O_RW.value == int(wr_rd.rw_wr()), "O_RW was incorrect on the {} rw" .format(wr_rd.rw_wr())
+    assert dut.O_ADDR_SLV.value == int(wr_rd.addr_slv(), base=2), f"{dut.O_ADDR_SLV.value} O_ADDR_SLV was incorrect on the {wr_rd.addr_slv()} addr slave for write"
+    assert dut.O_RW.value == int(wr_rd.rw_wr()), f"{dut.O_RW.value} O_RW was incorrect on the {wr_rd.rw_wr()} rw"
 
 #--------------------------------------------------------------------------
 def check_start_rd(dut, read):
     assert dut.O_DATA_VL.value == True, "O_DATA_VL was incorrect on the 1"
-    assert dut.O_ADDR_SLV.value == int(read.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr slve for write" .format(read.addr_slv())
-    assert dut.O_RW.value == int(read.rw_rd()), "O_RW was incorrect on the {} rw for write" .format(read.rw_rd())
-    assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2), "O_ADDR_REG was incorrect on the {} addr reg for write" .format(read.addr_reg())
+    assert dut.O_ADDR_SLV.value == int(read.addr_slv(), base=2), f"{dut.O_ADDR_SLV.value} O_ADDR_SLV was incorrect on the {read.addr_slv()} addr slve for write"
+    assert dut.O_RW.value == int(read.rw_rd()), f"{dut.O_RW.value} O_RW was incorrect on the {read.rw_rd()} rw for write"
+    assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2), f"{dut.O_ADDR_REG.value} O_ADDR_REG was incorrect on the {read.addr_reg()} addr reg for write"
 
 #--------------------------------------------------------------------------
 def check_writing(dut, write, i):
-    assert dut.O_DATA_VL.value == True, "O_DATA_VL was incorrect on the 1 in {} loop" .format(i)
-    assert dut.O_ADDR_SLV.value == int(write.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr slave for write in {} loop" .format(write.addr_slv(), i)
-    assert dut.O_RW.value == int(write.rw_wr()), "O_RW was incorrect on the {} rw in {} loop" .format(write.rw_wr(), i)
-    assert dut.O_ADDR_REG.value == int(write.addr_reg(), base=2) + i, "O_ADDR_REG was incorrect on the {} addr reg for write in {} loop" .format(format(int(write.addr_reg(), base=2) + i, "b"), i)
-    assert dut.O_DATA_RD.value == int(write.data(), base=2), "O_DATA_RD was incorrect on the {} data for write in {} loop" .format(write.data(), i)
+    assert dut.O_DATA_VL.value == True, f"O_DATA_VL was incorrect on the 1 in {i} loop"
+    assert dut.O_ADDR_SLV.value == int(write.addr_slv(), base=2), f"{dut.O_ADDR_SLV.value} O_ADDR_SLV was incorrect on the {write.addr_slv()} addr slave for write in {i} loop"
+    assert dut.O_RW.value == int(write.rw_wr()), f"{dut.O_RW.value} O_RW was incorrect on the {write.rw_wr()} rw in {i} loop"
+    assert dut.O_ADDR_REG.value == int(write.addr_reg(), base=2) + i, f"{dut.O_ADDR_REG.value} O_ADDR_REG was incorrect on the {format(int(write.addr_reg(), base=2) + i, 'b')} addr reg for write in {i} loop"
+    assert dut.O_DATA_RD.value == int(write.data(), base=2), f"{dut.O_DATA_RD.value} O_DATA_RD was incorrect on the {write.data()} data for write in {i} loop"
 
 #--------------------------------------------------------------------------
 def check_reading(dut, read, ack_mstr, i):
@@ -198,7 +198,7 @@ def check_reading(dut, read, ack_mstr, i):
     if ack_mstr == False:
         i += 1;
         valid = 1;
-    assert dut.O_ADDR_SLV.value == int(read.addr_slv(), base=2), "O_ADDR_SLV was incorrect on the {} addr_slv for write in {} loop" .format(read.addr_slv(), i)
-    assert dut.O_RW.value == int(read.rw_rd()), "O_RW was incorrect on the {} rw for write in {} loop" .format(read.rw_rd(), i)
-    assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2) + i, "O_ADDR_REG was incorrect on the {} addr_reg for write in {} loop" .format(format(int(read.addr_reg(), base=2) + i, "b"), i)
-    assert dut.O_DATA_VL.value == valid, "O_DATA_VL was incorrect {} in {} loop" .format(valid, i)
+    assert dut.O_ADDR_SLV.value == int(read.addr_slv(), base=2), f"{dut.O_ADDR_SLV.value} O_ADDR_SLV was incorrect on the {read.addr_slv()} addr_slv for write in {i} loop"
+    assert dut.O_RW.value == int(read.rw_rd()), f"{dut.O_RW.value} O_RW was incorrect on the {read.rw_rd()} rw for write in {i} loop"
+    assert dut.O_ADDR_REG.value == int(read.addr_reg(), base=2) + i, f"O{dut.O_ADDR_REG.value} _ADDR_REG was incorrect on the {format(int(read.addr_reg(), base=2) + i, 'b')} addr_reg for write in {i} loop"
+    assert dut.O_DATA_VL.value == valid, f"{dut.O_DATA_VL.value} O_DATA_VL was incorrect {valid} in {i} loop"
