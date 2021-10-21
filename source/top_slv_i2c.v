@@ -110,9 +110,9 @@ module top_slv_i2c
 //--------------------------------------------------------------------------
 `ifdef COCOTB_SIM
     initial begin
-      $dumpfile ("top_slv_i2c.vcd");
-      $dumpvars (0, top_slv_i2c);
-      #1;
+        $dumpfile ("top_slv_i2c.vcd");
+        $dumpvars (0, top_slv_i2c);
+        #1;
     end
 `endif
 

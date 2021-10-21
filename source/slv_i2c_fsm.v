@@ -68,7 +68,7 @@ module slv_i2c_fsm
     reg                       go;
     reg                       nx_go;
 
-//  determining next state of FSM and signals
+//  determining the next state of FSM and signals
     always @(*) begin
         nx_st = st;
         nx_o_addr_slv = O_ADDR_SLV;
@@ -137,13 +137,13 @@ module slv_i2c_fsm
                             if (I_MDL_LW_IO_SCL)
                                 begin
                                     nx_go = 1'b0;
-                                    nx_o_sda = 1'b1;
                                     if (comm_slv[0])
                                         begin
                                             nx_buff_wr = {I_DATA_WR[DATA_SZ-2:0], 1'b0};
                                             nx_o_sda = I_DATA_WR[DATA_SZ-1];
                                             nx_st = WR;
                                         end
+                                    else nx_o_sda = 1'b1;
                                 end
                             if (I_RS_IO_SDA & I_SCL)
                                 begin
@@ -220,8 +220,8 @@ module slv_i2c_fsm
                                             nx_o_sda = ack_from_slave;
                                             nx_go = 1'b1;
                                             nx_o_data_vl = 1'b0;
-                                            nx_st = ACK_DATA;
                                             nx_addr_reg_offset = O_ADDR_REG + 1'b1;
+                                            nx_st = ACK_DATA;
                                         end
                                 end
                         end
@@ -271,6 +271,7 @@ module slv_i2c_fsm
                             nx_o_data_vl = 1'b0;
                             pr_comm_slv = {DATA_SZ{1'b0}};
                             nx_ack_from_slave = 1'b1;
+                            nx_addr_reg_offset = {DATA_SZ{1'b0}};
                         end
         endcase
     end
