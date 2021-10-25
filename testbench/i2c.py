@@ -29,6 +29,12 @@ class Write:
         """ Overwrite data """
         self.__data = add_zero(format((random.randrange(0, 2**8)), "b"));
 
+    def __repr__(self):
+        return (f'{self.__class__.__name__}('
+                f'{self.__addr_slv!r} : addr_slv, {self.__rw_wr!r} : rw_wr, '
+                f'{self.__addr_slv_wr!r} : addr_slv_wr, {self.__addr_reg!r} : addr_reg, '
+                f'{self.__data!r} : data)')
+
 #--------------------------------------------------------------------------
 class Read:
     """ Creates slave address, rw, register address of slave, data from slave for reading """
@@ -65,6 +71,13 @@ class Read:
     def new_data_from_slv(self):
         """ Overwrite data """
         self.__data_from_slv = add_zero(format((random.randrange(0, 2**8)), "b"));
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}('
+                f'{self.__addr_slv!r} : addr_slv, {self.__rw_wr!r} : rw_wr, '
+                f'{self.__rw_rd!r} : rw_rd, {self.__addr_slv_wr!r} : addr_slv_wr, '
+                f'{self.__addr_slv_rd!r} : addr_slv_rd, {self.__addr_reg!r} : addr_reg, '
+                f'{self.__data_from_slv!r} : data_from_slv)')
 
 #--------------------------------------------------------------------------
 def add_zero(data:str, sz:int=8) -> str:
